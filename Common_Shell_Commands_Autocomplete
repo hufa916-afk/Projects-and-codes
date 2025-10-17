@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+#
+# Common_Shell_Commands_Autocomplete
+# A comprehensive, context-aware autocomplete engine for power users.
+# Supports Git, Docker, Kubectl, Systemctl, and GCP/AWS CLI utilities.
+
+# -------------------------
+# Utility: Smart word extraction
+# -------------------------
+_get_words() {
+    COMPREPLY=()
+    local cur prev cmdlist
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+}
+
+# -------------------------
+# Autocomplete for Git
+# -------------------------
+_git_autocomplete() {
+    local cur prev
+    _get_comp_words_by_ref -n : cur prev
+
+    case "$prev" in
+        checkout|merge|rebase|cherry-pick|reset)
+            COMPREPLY=( $(compgen -W "$(git branch --all | sed 's/[* ]//g')" -- "$cur") )
+            ;;
+        add|rm|restore)
+            COMPREPLY=( $(compgen -f -- "$cur") )
+            ;;
+        *)
+            local subcommands="add bisect branch checkout clone commit diff fetch grep init log merge pull push rebase reset restore rm show status tag"
+            COMPREPLY=( $(compgen -W "$subcommands" -- "$cur") )
+            ;;
+    esac
+}
+
+# -------------------------
+# Autocomplete for Docker
+# -------------------------
+_docker_autocomplete() {
+    local cur prev
+    _get_comp_words_by_ref -n : cur prev
+
+    case "$prev" in
+        start|stop|rm|inspect|logs|exec)
+            COMPREPLY=( $(compgen -W "$(docker ps -a --format '{{.Names}}')" -- "$cur") )
+            ;;
+        images)
+            COMPREPLY=( $(compgen -W "$(docker images --format '{{.Repository}}:{{.Tag}}')" -- "$cur") )
+            ;;
+        *)
+            local subcommands="build commit cp create exec images inspect kill logs ps pull push restart rm rmi run start stop tag top volume network"
+            COMPREPLY=( $(compgen -W "$subcommands" -- "$cur") )
+            ;;
+    esac
+}
+
+# -------------------------
+# Autocomplete for Kubectl
+# -------------------------
+_kubectl_autocomplete() {
+    local cur prev
+    _get_comp_words_by_ref -n : cur prev
+
+    case "$prev" in
+        get|describe|delete|edit|logs|exec)
+            COMPREPLY=( $(compgen -W "$(kubectl get pods -o name | sed 's|pod/||g')" -- "$cur") )
+            ;;
+        -n|--namespace)
+            COMPREPLY=( $(compgen -W "$(kubectl get ns -o jsonpath='{.items[*].metadata.name}')" -- "$cur") )
+            ;;
+        *)
+            local subcommands="apply get describe delete logs exec rollout config top api-resources api-versions"
+            COMPREPLY=( $(compgen -W "$subcommands" -- "$cur") )
+            ;;
+    esac
+}
+
+# -------------------------
+# Autocomplete for Systemctl
+# -------------------------
+_systemctl_autocomplete() {
+    local cur prev
+    _get_comp_words_by_ref -n : cur prev
+
+    case "$prev" in
+        start|stop|restart|status|enable|disable)
+            COMPREPLY=( $(compgen -W "$(systemctl list-unit-files --type=service --no-legend | awk '{print $1}')" -- "$cur") )
+            ;;
+        *)
+            local subcommands="start stop restart status enable disable daemon-reload list-units list-unit-files show cat"
+            COMPREPLY=( $(compgen -W "$subcommands" -- "$cur") )
+            ;;
+    esac
+}
+
+# -------------------------
+# Autocomplete for GCloud
+# -------------------------
+_gcloud_autocomplete() {
+    local cur prev
+    _get_comp_words_by_ref -n : cur prev
+
+    case "$prev" in
+        compute)
+            COMPREPLY=( $(compgen -W "instances disks addresses snapshots firewall networks" -- "$cur") )
+            ;;
+        instances)
+            COMPREPLY=( $(compgen -W "$(gcloud compute instances list --format='value(name)')" -- "$cur") )
+            ;;
+        *)
+            local subcommands="auth config compute container iam kms logging projects services sql storage"
+            COMPREPLY=( $(compgen -W "$subcommands" -- "$cur") )
+            ;;
+    esac
+}
+
+# -------------------------
+# Autocomplete for AWS CLI
+# -------------------------
+_aws_autocomplete() {
+    local cur prev
+    _get_comp_words_by_ref -n : cur prev
+
+    case "$prev" in
+        s3)
+            COMPREPLY=( $(compgen -W "ls cp sync rm mv mb rb presign" -- "$cur") )
+            ;;
+        ec2)
+            COMPREPLY=( $(compgen -W "describe-instances describe-volumes start-instances stop-instances" -- "$cur") )
+            ;;
+        *)
+            local subcommands="s3 ec2 iam cloudfront cloudwatch lambda sts"
+            COMPREPLY=( $(compgen -W "$subcommands" -- "$cur") )
+            ;;
+    esac
+}
+
+# -------------------------
+# Fallback fuzzy completion
+# -------------------------
+_fallback_autocomplete() {
+    local cur
+    _get_comp_words_by_ref -n : cur
+    local cmds="git docker kubectl systemctl gcloud aws"
+    COMPREPLY=( $(compgen -W "$cmds" -- "$cur") )
+}
+
+# -------------------------
+# Dispatcher
+# -------------------------
+_common_shell_autocomplete() {
+    local cmd="${COMP_WORDS[0]}"
+    case "$cmd" in
+        git) _git_autocomplete ;;
+        docker) _docker_autocomplete ;;
+        kubectl) _kubectl_autocomplete ;;
+        systemctl) _systemctl_autocomplete ;;
+        gcloud) _gcloud_autocomplete ;;
+        aws) _aws_autocomplete ;;
+        *) _fallback_autocomplete ;;
+    esac
+}
+
+# -------------------------
+# Register the autocompletion handlers
+# -------------------------
+complete -F _common_shell_autocomplete git docker kubectl systemctl gcloud aws
