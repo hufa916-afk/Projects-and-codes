@@ -1,6 +1,6 @@
-# Hacktoberfest 2023 Repository 🎉
+# Hacktoberfest 2025 Repository 🎉
 
-Welcome to the Hacktoberfest 2023 Repository! This is a space where developers from around the world can contribute their code, projects, and open-source contributions to celebrate Hacktoberfest.
+Welcome to the Hacktoberfest 2025 Repository! This is a space where developers from around the world can contribute their code, projects, and open-source contributions to celebrate Hacktoberfest.
 
 ![Hacktoberfest Logo](hacktoberfest-logo.png)
 
